@@ -26,27 +26,28 @@ def brute_caesar(word):
             else:
                 decrypted_word += char
         possible_decryptions.append((shift, decrypted_word))
-    
+
     return possible_decryptions
 
 def format_decryptions(possible_decryptions):
     found_words = []
     other_words = []
-    
+
     for shift, word in possible_decryptions:
         if word in hashset:
             found_words.append((shift, word))
         else:
             other_words.append((shift, word))
-    
+
     # Prioritize found words by placing them at the top
     prioritized_decryptions = found_words + other_words
-    
-    result = ""
+
+    result = "<div style='margin-top: 20px;'>"
     for shift, word in prioritized_decryptions:
         color = "green" if word in hashset else "black"
-        result += f"<h3 style=\"color:{color};\"> Key: {shift}, word: {word} </h3> <br>"
-    
+        result += f"<h4 style=\"color:{color}; margin: 5px;\"> Key: {shift}, Word: {word} </h4>"
+    result += "</div>"
+
     return result
 
 @app.route("/", methods=["GET", "POST"])
@@ -57,15 +58,108 @@ def index():
             content = uploaded_file.read().decode('utf-8')
             first_line = content.splitlines()[0]
             result = brute_caesar(first_line)
-            return format_decryptions(result)
+            return render_template_string('''
+                <html>
+                    <head>
+                        <title>Cifra de César - Brute Force</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f4f4f4;
+                                color: #333;
+                                margin: 0;
+                                padding: 20px;
+                            }
+                            h1 {
+                                color: #007BFF;
+                            }
+                            .container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background: white;
+                                padding: 20px;
+                                border-radius: 8px;
+                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                            }
+                            input[type="file"] {
+                                margin-bottom: 10px;
+                            }
+                            input[type="submit"] {
+                                padding: 10px 15px;
+                                background-color: #007BFF;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                cursor: pointer;
+                            }
+                            input[type="submit"]:hover {
+                                background-color: #0056b3;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h1>Cifra de César Brute Force</h1>
+                            <form method="post" enctype="multipart/form-data">
+                                <input type="file" name="file" accept=".txt" required>
+                                <br>
+                                <input type="submit" value="Enviar">
+                            </form>
+                            <hr>
+                            <h2>Resultados:</h2>
+                            <div>{{ results|safe }}</div>
+                        </div>
+                    </body>
+                </html>
+            ''', results=format_decryptions(result))
     return render_template_string('''
         <html>
-            <body style="font-family: Arial, sans-serif; margin: 20px;">
-                <h1 style="color: #333;">Cifra de César Brute Force</h1>
-                <form method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" accept=".txt" required style="margin-bottom: 10px;">
-                    <input type="submit" value="Enviar" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                </form>
+            <head>
+                <title>Cifra de César - Brute Force</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        color: #333;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    h1 {
+                        color: #007BFF;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    }
+                    input[type="file"] {
+                        margin-bottom: 10px;
+                    }
+                    input[type="submit"] {
+                        padding: 10px 15px;
+                        background-color: #007BFF;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    }
+                    input[type="submit"]:hover {
+                        background-color: #0056b3;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Cifra de César Brute Force</h1>
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="file" name="file" accept=".txt" required>
+                        <br>
+                        <input type="submit" value="Enviar">
+                    </form>
+                </div>
             </body>
         </html>
     ''')
