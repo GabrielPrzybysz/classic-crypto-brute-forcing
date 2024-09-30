@@ -30,12 +30,23 @@ def brute_caesar(word):
     return possible_decryptions
 
 def format_decryptions(possible_decryptions):
-    result = ""
+    found_words = []
+    other_words = []
+    
     for shift, word in possible_decryptions:
         if word in hashset:
-            result += f"<h3 style=\"color:green\"> Key: {shift}, word: {word} </h3> <br>"
+            found_words.append((shift, word))
         else:
-            result += f"<h3> Key: {shift}, word: {word} </h3> <br>"
+            other_words.append((shift, word))
+    
+    # Prioritize found words by placing them at the top
+    prioritized_decryptions = found_words + other_words
+    
+    result = ""
+    for shift, word in prioritized_decryptions:
+        color = "green" if word in hashset else "black"
+        result += f"<h3 style=\"color:{color};\"> Key: {shift}, word: {word} </h3> <br>"
+    
     return result
 
 @app.route("/", methods=["GET", "POST"])
@@ -49,11 +60,11 @@ def index():
             return format_decryptions(result)
     return render_template_string('''
         <html>
-            <body>
-                <h1>Cifra de César Brute Force</h1>
+            <body style="font-family: Arial, sans-serif; margin: 20px;">
+                <h1 style="color: #333;">Cifra de César Brute Force</h1>
                 <form method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" accept=".txt" required>
-                    <input type="submit" value="Enviar">
+                    <input type="file" name="file" accept=".txt" required style="margin-bottom: 10px;">
+                    <input type="submit" value="Enviar" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">
                 </form>
             </body>
         </html>
