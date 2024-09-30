@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template_string
+import itertools
 
 app = Flask(__name__)
 
@@ -29,23 +30,49 @@ def brute_caesar(word):
 
     return possible_decryptions
 
+def vigenere_decrypt(ciphertext, key):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    key = key.lower()
+    decrypted_text = []
+    key_length = len(key)
+    
+    for i, char in enumerate(ciphertext.lower()):
+        if char in alphabet:
+            key_char = key[i % key_length]
+            shifted_index = (alphabet.index(char) - alphabet.index(key_char)) % 26
+            decrypted_text.append(alphabet[shifted_index])
+        else:
+            decrypted_text.append(char)  # Non-alphabet characters remain unchanged
+            
+    return ''.join(decrypted_text)
+
+def brute_force_vigenere(ciphertext):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    possible_decryptions = []
+    
+    # Generate all possible 3-character keys
+    for key_tuple in itertools.product(alphabet, repeat=3):
+        key = ''.join(key_tuple)
+        decrypted_word = vigenere_decrypt(ciphertext, key)
+        possible_decryptions.append((key, decrypted_word))
+    
+    return possible_decryptions
+
 def format_decryptions(possible_decryptions):
     found_words = []
     other_words = []
 
-    for shift, word in possible_decryptions:
+    for key_or_shift, word in possible_decryptions:
         if word in hashset:
-            found_words.append((shift, word))
+            found_words.append((key_or_shift, word))
         else:
-            other_words.append((shift, word))
+            other_words.append((key_or_shift, word))
 
-    # Prioritize found words by placing them at the top
     prioritized_decryptions = found_words + other_words
-
     result = "<div style='margin-top: 20px;'>"
-    for shift, word in prioritized_decryptions:
+    for key_or_shift, word in prioritized_decryptions:
         color = "green" if word in hashset else "black"
-        result += f"<h4 style=\"color:{color}; margin: 5px;\"> Key: {shift}, Word: {word} </h4>"
+        result += f"<h4 style=\"color:{color}; margin: 5px;\"> Key: {key_or_shift}, Word: {word} </h4>"
     result += "</div>"
 
     return result
@@ -57,11 +84,17 @@ def index():
         if uploaded_file and uploaded_file.filename.endswith('.txt'):
             content = uploaded_file.read().decode('utf-8')
             first_line = content.splitlines()[0]
-            result = brute_caesar(first_line)
+            cipher_type = request.form['cipher']
+            
+            if cipher_type == 'caesar':
+                result = brute_caesar(first_line)
+            elif cipher_type == 'vigenere':
+                result = brute_force_vigenere(first_line)
+            
             return render_template_string('''
                 <html>
                     <head>
-                        <title>Cifra de César - Brute Force</title>
+                        <title>Cifra de César e Vigenère - Brute Force</title>
                         <style>
                             body {
                                 font-family: Arial, sans-serif;
@@ -84,6 +117,9 @@ def index():
                             input[type="file"] {
                                 margin-bottom: 10px;
                             }
+                            input[type="text"] {
+                                margin-bottom: 10px;
+                            }
                             input[type="submit"] {
                                 padding: 10px 15px;
                                 background-color: #007BFF;
@@ -99,9 +135,12 @@ def index():
                     </head>
                     <body>
                         <div class="container">
-                            <h1>Cifra de César Brute Force</h1>
+                            <h1>Cifra de César e Vigenère Brute Force</h1>
                             <form method="post" enctype="multipart/form-data">
                                 <input type="file" name="file" accept=".txt" required>
+                                <br>
+                                <input type="radio" name="cipher" value="caesar" checked> Cifra de César
+                                <input type="radio" name="cipher" value="vigenere"> Cifra de Vigenère
                                 <br>
                                 <input type="submit" value="Enviar">
                             </form>
@@ -112,10 +151,11 @@ def index():
                     </body>
                 </html>
             ''', results=format_decryptions(result))
+    
     return render_template_string('''
         <html>
             <head>
-                <title>Cifra de César - Brute Force</title>
+                <title>Cifra de César e Vigenère - Brute Force</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;
@@ -153,9 +193,12 @@ def index():
             </head>
             <body>
                 <div class="container">
-                    <h1>Cifra de César Brute Force</h1>
+                    <h1>Cifra de César e Vigenère Brute Force</h1>
                     <form method="post" enctype="multipart/form-data">
                         <input type="file" name="file" accept=".txt" required>
+                        <br>
+                        <input type="radio" name="cipher" value="caesar" checked> Cifra de César
+                        <input type="radio" name="cipher" value="vigenere"> Cifra de Vigenère
                         <br>
                         <input type="submit" value="Enviar">
                     </form>
