@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, send_file
 import itertools
+import os
 
 app = Flask(__name__)
 
@@ -42,7 +43,7 @@ def vigenere_decrypt(ciphertext, key):
             shifted_index = (alphabet.index(char) - alphabet.index(key_char)) % 26
             decrypted_text.append(alphabet[shifted_index])
         else:
-            decrypted_text.append(char)  # Non-alphabet characters remain unchanged
+            decrypted_text.append(char)
             
     return ''.join(decrypted_text)
 
@@ -50,7 +51,6 @@ def brute_force_vigenere(ciphertext):
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
     possible_decryptions = []
     
-    # Generate all possible 3-character keys
     for key_tuple in itertools.product(alphabet, repeat=3):
         key = ''.join(key_tuple)
         decrypted_word = vigenere_decrypt(ciphertext, key)
@@ -77,6 +77,11 @@ def format_decryptions(possible_decryptions):
 
     return result
 
+def save_to_file(filename, possible_decryptions):
+    with open(filename, 'w') as file:
+        for key_or_shift, word in possible_decryptions:
+            file.write(f"Key: {key_or_shift}, Word: {word}\n")
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -88,8 +93,12 @@ def index():
             
             if cipher_type == 'caesar':
                 result = brute_caesar(first_line)
+                filename = 'caesar_output.txt'
             elif cipher_type == 'vigenere':
                 result = brute_force_vigenere(first_line)
+                filename = 'vigenere_output.txt'
+            
+            save_to_file(filename, result)
             
             return render_template_string('''
                 <html>
@@ -115,9 +124,6 @@ def index():
                                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
                             }
                             input[type="file"] {
-                                margin-bottom: 10px;
-                            }
-                            input[type="text"] {
                                 margin-bottom: 10px;
                             }
                             input[type="submit"] {
@@ -147,10 +153,12 @@ def index():
                             <hr>
                             <h2>Resultados:</h2>
                             <div>{{ results|safe }}</div>
+                            <hr>
+                            <a href="/download/{{ filename }}" download="{{ filename }}">Download Resultados</a>
                         </div>
                     </body>
                 </html>
-            ''', results=format_decryptions(result))
+            ''', results=format_decryptions(result), filename=filename)
     
     return render_template_string('''
         <html>
@@ -206,3 +214,7 @@ def index():
             </body>
         </html>
     ''')
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_file(filename, as_attachment=True)
