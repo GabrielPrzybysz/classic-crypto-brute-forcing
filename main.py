@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template_string, send_file
 import itertools
-import os
 
 app = Flask(__name__)
 
