@@ -35,7 +35,7 @@ def vigenere_decrypt(ciphertext, key):
     key = key.lower()
     decrypted_text = []
     key_length = len(key)
-    
+
     for i, char in enumerate(ciphertext.lower()):
         if char in alphabet:
             key_char = key[i % key_length]
